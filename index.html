@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Vikram Kedar</title>
+<meta name="description" content="Vikram Kedar, Pittsburgh. Short films, sports stories and small experiments, most of them made with AI in the loop."/>
+<meta property="og:title" content="Vikram Kedar"/>
+<meta property="og:description" content="Short films, sports stories and small experiments, most of them made with AI in the loop."/>
+<meta property="og:url" content="https://vikramkedar.com/"/>
+<meta property="og:image" content="https://vikramkedar.com/assets/josh-gibson-372.jpg"/>
+<meta name="theme-color" content="#f4efe5" media="(prefers-color-scheme: light)"/>
+<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)"/>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230a0a0a'/%3E%3Crect x='6' y='6' width='52' height='52' fill='none' stroke='%23d4af37' stroke-width='3'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='28' fill='%23d4af37' text-anchor='middle'%3EVK%3C/text%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --paper: #f4efe5;
+    --paper-2: #ebe4d6;
+    --ink: #17140f;
+    --ink-70: rgba(23, 20, 15, .72);
+    --ink-50: rgba(23, 20, 15, .52);
+    --ink-30: rgba(23, 20, 15, .32);
+    --line: rgba(23, 20, 15, .13);
+    --gold: #a37b1c;
+    --gold-soft: rgba(163, 123, 28, .12);
+    --card: #fbf8f1;
+    --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --sans: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --pad: 40px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0a0a0a;
+      --paper-2: #121212;
+      --ink: #f0ece3;
+      --ink-70: rgba(240, 236, 227, .72);
+      --ink-50: rgba(240, 236, 227, .52);
+      --ink-30: rgba(240, 236, 227, .32);
+      --line: rgba(240, 236, 227, .13);
+      --gold: #d4af37;
+      --gold-soft: rgba(212, 175, 55, .12);
+      --card: #141414;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { color-scheme: light dark; scroll-behavior: smooth; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--sans); line-height: 1.55; -webkit-font-smoothing: antialiased;
+    min-height: 100vh; overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 var(--pad); }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 4px; text-transform: uppercase; color: var(--gold); }
+  .mono { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; }
+
+  /* ---------- header ---------- */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px var(--pad); border-bottom: 1px solid var(--line); }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .monogram { width: 34px; height: 34px; border: 1px solid var(--gold); color: var(--gold); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-weight: 700; font-size: 15px; letter-spacing: .5px; flex-shrink: 0; }
+  .brand-name { font-family: var(--serif); font-size: 18px; font-weight: 700; white-space: nowrap; }
+  nav { display: flex; gap: 22px; }
+  nav a { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-50); padding: 6px 0; border-bottom: 1px solid transparent; }
+  nav a:hover { color: var(--ink); border-color: var(--gold); }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 72px 0 56px; border-bottom: 1px solid var(--line); }
+  .hero h1 { font-family: var(--serif); font-size: clamp(44px, 8vw, 92px); font-weight: 900; line-height: .98; letter-spacing: -.5px; margin: 14px 0 22px; }
+  .hero h1 em { color: var(--gold); font-style: italic; }
+  .lede { font-size: 20px; line-height: 1.5; color: var(--ink-70); max-width: 640px; font-weight: 300; }
+  .lede strong { font-weight: 500; color: var(--ink); }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; border: 1px solid var(--ink); background: var(--ink); color: var(--paper); transition: background .15s, color .15s, border-color .15s; }
+  .btn:hover { background: var(--gold); border-color: var(--gold); color: #000; }
+  .btn-ghost { background: transparent; color: var(--ink-70); border-color: var(--line); }
+  .btn-ghost:hover { background: transparent; color: var(--gold); border-color: var(--gold); }
+  .numbers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: 44px; max-width: 760px; }
+  .n { background: var(--paper); padding: 16px 18px; min-width: 0; }
+  .n b { display: block; font-family: var(--serif); font-size: 26px; font-weight: 700; color: var(--gold); line-height: 1.1; }
+  .n span { font-size: 12px; color: var(--ink-50); }
+
+  /* ---------- sections ---------- */
+  section { padding: 56px 0; border-bottom: 1px solid var(--line); }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+  .sec-head h2 { font-family: var(--serif); font-size: 32px; font-weight: 700; line-height: 1.1; }
+  .sec-head h2 em { color: var(--gold); font-style: italic; }
+  .sec-head a { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); }
+  .sec-head a:hover { text-decoration: underline; }
+
+  /* featured */
+  .featured { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .feat { display: block; background: var(--card); border: 1px solid var(--line); overflow: hidden; transition: transform .2s, border-color .2s; }
+  .feat:hover { transform: translateY(-3px); border-color: var(--gold); }
+  .feat .img { position: relative; background: #000; aspect-ratio: 9 / 16; overflow: hidden; }
+  .feat .img.wide { aspect-ratio: 16 / 9; }
+  .feat img { width: 100%; height: 100%; object-fit: cover; }
+  .feat .badge { position: absolute; right: 8px; bottom: 8px; font-family: var(--mono); font-size: 11px; background: rgba(0,0,0,.75); color: #f0ece3; padding: 2px 6px; }
+  .feat .body { padding: 14px 16px 16px; }
+  .feat .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); }
+  .feat h3 { font-family: var(--serif); font-size: 19px; line-height: 1.25; margin: 6px 0 6px; font-weight: 700; }
+  .feat p { font-size: 14px; color: var(--ink-70); line-height: 1.5; }
+  .featured .feat:first-child { grid-row: span 1; }
+
+  /* series */
+  .series { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card { display: flex; flex-direction: column; gap: 10px; padding: 22px; background: var(--card); border: 1px solid var(--line); transition: border-color .2s, transform .2s; min-height: 190px; }
+  .card:hover { border-color: var(--gold); transform: translateY(-2px); }
+  .card .meta { display: flex; justify-content: space-between; gap: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-30); }
+  .card .meta b { color: var(--gold); font-weight: 500; }
+  .card h3 { font-family: var(--serif); font-size: 22px; font-weight: 700; line-height: 1.15; }
+  .card p { font-size: 14px; color: var(--ink-70); line-height: 1.55; flex: 1; }
+  .card .go { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); }
+
+  /* how */
+  .how { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: start; }
+  .how p { color: var(--ink-70); font-size: 16px; line-height: 1.65; max-width: 560px; }
+  .how p + p { margin-top: 14px; }
+  .rules { list-style: none; display: flex; flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+  .rules li { padding: 14px 0; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 28px 1fr; gap: 12px; font-size: 15px; line-height: 1.5; }
+  .rules li i { font-family: var(--serif); font-style: italic; color: var(--gold); font-size: 18px; line-height: 1.2; }
+  .rules li b { font-weight: 500; }
+
+  /* now */
+  .now { display: grid; grid-template-columns: 220px 1fr; gap: 40px; }
+  .now .stamp { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 1.1; }
+  .now .stamp small { display: block; font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-30); margin-top: 8px; font-weight: 400; }
+  .now ul { list-style: none; display: flex; flex-direction: column; }
+  .now li { padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 15px; color: var(--ink-70); line-height: 1.5; }
+  .now li:first-child { padding-top: 0; }
+  .now li b { color: var(--ink); font-weight: 500; }
+
+  /* footer */
+  footer { padding: 36px var(--pad); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-family: var(--mono); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-30); }
+  footer a { color: var(--ink-50); }
+  footer a:hover { color: var(--gold); }
+  footer .links { display: flex; gap: 18px; flex-wrap: wrap; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } html { scroll-behavior: auto; } }
+  @media (max-width: 900px) {
+    :root { --pad: 24px; }
+    .featured, .series { grid-template-columns: repeat(2, 1fr); }
+    .how { grid-template-columns: 1fr; gap: 28px; }
+    .now { grid-template-columns: 1fr; gap: 18px; }
+  }
+  @media (max-width: 600px) {
+    :root { --pad: 18px; }
+    .top { padding: 16px var(--pad); }
+    nav { gap: 14px; }
+    nav a:first-child { display: none; }
+    .hero { padding: 44px 0 40px; }
+    .lede { font-size: 17px; }
+    .numbers { grid-template-columns: repeat(2, 1fr); }
+    .featured { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .feat .body { padding: 10px 12px 12px; }
+    .feat h3 { font-size: 15px; }
+    .feat p { display: none; }
+    .series { grid-template-columns: 1fr; }
+    section { padding: 40px 0; }
+    footer { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="brand" href="./" aria-label="Vikram Kedar, home">
+    <span class="monogram">VK</span>
+    <span class="brand-name">Vikram Kedar</span>
+  </a>
+  <nav aria-label="Sections">
+    <a href="#work">Work</a>
+    <a href="#how">How</a>
+    <a href="#now">Now</a>
+    <a href="https://acesandbabes.com/">Archive ↗</a>
+  </nav>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">Pittsburgh, PA</div>
+    <h1>Vikram <em>Kedar</em></h1>
+    <p class="lede">
+      I make short films and small systems, most of them with AI in the loop:
+      a personal-finance series where <strong>every number is computed, not quoted</strong>,
+      Pittsburgh sports stories with <strong>every claim sourced</strong>, and experiments
+      where two models argue until one of them changes its mind.
+    </p>
+    <div class="cta">
+      <a class="btn" href="https://acesandbabes.com/">Watch the archive</a>
+      <a class="btn btn-ghost" href="https://github.com/vikramkedar4">GitHub ↗</a>
+    </div>
+    <div class="numbers" aria-label="At a glance">
+      <div class="n"><b>40</b><span>videos in the archive</span></div>
+      <div class="n"><b>9</b><span>series and experiments</span></div>
+      <div class="n"><b>42 min</b><span>of finished footage</span></div>
+      <div class="n"><b>Sep 2026</b><span>latest release</span></div>
+    </div>
+  </section>
+
+  <section id="work">
+    <div class="sec-head">
+      <h2>Start <em>here</em></h2>
+      <a href="https://acesandbabes.com/">Everything, in order ↗</a>
+    </div>
+    <div class="featured">
+      <a class="feat" href="https://acesandbabes.com/#v=josh-gibson-372">
+        <div class="img"><img src="assets/josh-gibson-372.jpg" alt="" loading="lazy"/><span class="badge">0:45</span></div>
+        <div class="body">
+          <div class="kicker">Pittsburgh Stories</div>
+          <h3>The best hitter in baseball history was a Pittsburgh catcher</h3>
+          <p>Josh Gibson, the Grays and the Crawfords, and the day MLB rewrote its record book.</p>
+        </div>
+      </a>
+      <a class="feat" href="https://acesandbabes.com/#v=one-poem">
+        <div class="img wide"><img src="assets/one-poem.jpg" alt="" loading="lazy"/><span class="badge">7:15</span></div>
+        <div class="body">
+          <div class="kicker">One Poem · documentary</div>
+          <h3>Two AI models write one poem</h3>
+          <p>Every decision delegated to a recorded rule, every event in an append-only ledger. The ledger became the film.</p>
+        </div>
+      </a>
+      <a class="feat" href="https://acesandbabes.com/#v=money-math-ep21-where-it-all-goes">
+        <div class="img"><img src="assets/money-math-ep21-where-it-all-goes.jpg" alt="" loading="lazy"/><span class="badge">1:12</span></div>
+        <div class="body">
+          <div class="kicker">Money Math · ep. 21</div>
+          <h3>You will earn $2.6M. Here is where every dollar goes.</h3>
+          <p>A lifetime of earnings split into taxes, housing, transport, food and what is left. Every slice computed.</p>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <section id="series">
+    <div class="sec-head">
+      <h2>The <em>series</em></h2>
+      <a href="https://acesandbabes.com/">Open the archive ↗</a>
+    </div>
+    <div class="series">
+      <a class="card" href="https://acesandbabes.com/#p=Money%20Math">
+        <div class="meta"><b>21 shorts</b><span>Finance</span></div>
+        <h3>Money Math</h3>
+        <p>Minimum payments, the Rule of 72, the 1% fee, the tax-bracket myth. Every figure on screen is computed by one finance engine, so the numbers can be checked, not just believed.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Pittsburgh%20Stories">
+        <div class="meta"><b>5 shorts</b><span>Sports history</span></div>
+        <h3>Pittsburgh Stories</h3>
+        <p>The Steelers cost $2,500. The Yankees outscored the Pirates 55 to 27 and lost. Four Hall of Famers in one draft. Lemieux buys the Penguins. Every claim sourced in the project notes.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Vik's%20Picks">
+        <div class="meta"><b>Weekly</b><span>NFL</span></div>
+        <h3>Vik's Picks</h3>
+        <p>Four AI models make independent straight-up picks for every NFL game of the week. Winners only: no spreads, no odds, no gambling language.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Vik's%20Picks%20Arena">
+        <div class="meta"><b>Weekly</b><span>AI vs AI</span></div>
+        <h3>Vik's Picks Arena</h3>
+        <p>Two models pick blind, see each other's picks, attack the ones they think are wrong with a stated fact, then hold or flip. Picks lock before kickoff and the scoreboard decides.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Code%20Duel">
+        <div class="meta"><b>3 duels</b><span>AI vs AI</span></div>
+        <h3>Code Duel</h3>
+        <p>Two models solve the same task blind and attack each other's code with test cases. A hidden test suite, hashed before either sees the task, is the only judge.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=One%20Poem">
+        <div class="meta"><b>Film + 2 cuts</b><span>AI vs AI</span></div>
+        <h3>One Poem</h3>
+        <p>Two models write one poem. Every decision was delegated to a recorded rule; the append-only ledger of what happened became a seven-minute documentary.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Ticker.exe">
+        <div class="meta"><b>2 episodes</b><span>Markets</span></div>
+        <h3>Ticker.exe</h3>
+        <p>A show about a simulated $1M portfolio: a passive core and an AI-managed sleeve, marked daily against the index. Nothing in it is real money.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Guess%20the%20Price">
+        <div class="meta"><b>1 short</b><span>Art</span></div>
+        <h3>Guess the Price</h3>
+        <p>Show the work, force a choice between three auction prices, reveal the real one, convert it into Honda Civics.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Experiments">
+        <div class="meta"><b>2 pieces</b><span>Generative</span></div>
+        <h3>Experiments</h3>
+        <p>Particles that self-organize into a word, drawn one frame at a time. An organ that cannot exist. The one-offs that did not become a series.</p>
+        <span class="go">Watch →</span>
+      </a>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="sec-head"><h2>How it <em>works</em></h2></div>
+    <div class="how">
+      <div>
+        <p>Each series is a small system, not a one-off edit. A locked script, a computation engine, or a ledger sits underneath, and the video is rendered from it. That is what makes the work checkable: change the input and the film changes with it.</p>
+        <p>AI is in the loop as a writer, a participant, or a narrator, never as the referee. Where two models compete, a program that was fixed before they started decides who won.</p>
+      </div>
+      <ul class="rules">
+        <li><i>1</i><span><b>Computed, not quoted.</b> Every number on screen in Money Math comes out of one finance engine that can be re-run.</span></li>
+        <li><i>2</i><span><b>Sourced, not remembered.</b> Every claim in a sports story has a citation in the project's metadata before it is rendered.</span></li>
+        <li><i>3</i><span><b>Recorded, not retold.</b> When models compete, every move goes into an append-only ledger. Nothing is retried for a prettier result.</span></li>
+        <li><i>4</i><span><b>Locked before the outcome.</b> Picks lock before kickoff. Test suites are hashed before the task is revealed.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="now">
+    <div class="now">
+      <div class="stamp">Now<small>September 2026</small></div>
+      <ul>
+        <li><b>Vik's Picks Arena, Week 1</b> is locked: 15 games, 3 disagreements, 6 attacks, 0 flips. The scoreboard settles it after Monday night.</li>
+        <li><b>Code Duel</b> has three ties on the record. The next duel needs harder tasks.</li>
+        <li><b>Money Math</b> has 21 episodes cut. Next is the upload run, then episode 22.</li>
+        <li><b>The archive</b> at acesandbabes.com now holds every finished piece, in the order it happened.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>Vikram Kedar · Pittsburgh · © <span id="year">2026</span></span>
+  <span class="links">
+    <a href="https://acesandbabes.com/">acesandbabes.com</a>
+    <a href="https://github.com/vikramkedar4">github.com/vikramkedar4</a>
+  </span>
+</footer>
+<script>document.getElementById('year').textContent = String(new Date().getFullYear());</script>
+</body>
+</html>
