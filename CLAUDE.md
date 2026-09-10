@@ -24,9 +24,10 @@ deep links.
 ## Hosting
 
 GitHub repo `vikramkedar4/vikramkedar.com`, GitHub Pages from `main` (root),
-custom domain `vikramkedar.com`. DNS at GoDaddy; the record table is in
-README.md. GoDaddy's website builder ("Launching Soon" page) was the previous
-site and must stay unpublished once DNS moves.
+custom domain `vikramkedar.com` (live since 2026-09-10; the `CNAME` file is
+GitHub's, keep it). DNS at GoDaddy points at GitHub's four A records; the
+table is in README.md. GoDaddy's website builder ("Launching Soon" page) was
+the previous site and must stay unpublished.
 
 ## Test
 
