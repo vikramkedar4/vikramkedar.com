@@ -64,7 +64,7 @@
   .brand { display: flex; align-items: center; gap: 12px; }
   .monogram { width: 34px; height: 34px; border: 1px solid var(--gold); color: var(--gold); display: flex; align-items: center; justify-content: center; font-family: var(--serif); font-weight: 700; font-size: 15px; letter-spacing: .5px; flex-shrink: 0; }
   .brand-name { font-family: var(--serif); font-size: 18px; font-weight: 700; white-space: nowrap; }
-  nav { display: flex; gap: 22px; }
+  nav { display: flex; gap: 22px; flex-wrap: wrap; justify-content: flex-end; }
   nav a { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-50); padding: 6px 0; border-bottom: 1px solid transparent; }
   nav a:hover { color: var(--ink); border-color: var(--gold); }
 
@@ -102,6 +102,12 @@
   .feat .badge { position: absolute; right: 8px; bottom: 8px; font-family: var(--mono); font-size: 11px; background: rgba(0,0,0,.75); color: #f0ece3; padding: 2px 6px; }
   .feat .body { padding: 14px 16px 16px; }
   .feat .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); }
+  .play { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; align-items: center; }
+  .play .kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); }
+  .play h3 { font-family: var(--serif); font-size: 26px; font-weight: 700; line-height: 1.15; margin: 8px 0 12px; }
+  .play p { color: var(--muted, inherit); margin: 0 0 12px; line-height: 1.55; }
+  .play .btn { margin-top: 6px; }
+  @media (max-width: 720px) { .play { grid-template-columns: 1fr; } }
   .feat h3 { font-family: var(--serif); font-size: 19px; line-height: 1.25; margin: 6px 0 6px; font-weight: 700; }
   .feat p { font-size: 14px; color: var(--ink-70); line-height: 1.5; }
   .featured .feat:first-child { grid-row: span 1; }
@@ -177,6 +183,7 @@
   </a>
   <nav aria-label="Sections">
     <a href="#work">Work</a>
+    <a href="#play">Play</a>
     <a href="#how">How</a>
     <a href="#now">Now</a>
     <a href="https://acesandbabes.com/">Archive ↗</a>
@@ -394,6 +401,25 @@
         <p>Particles that self-organize into a word, drawn one frame at a time. An organ that cannot exist. The one-offs that did not become a series.</p>
         <span class="go">Watch →</span>
       </a>
+    </div>
+  </section>
+
+  <section id="play">
+    <div class="sec-head">
+      <h2>Play <em>something</em></h2>
+      <a href="play/">Open the game ↗</a>
+    </div>
+    <div class="play">
+      <a class="feat" href="play/">
+        <div class="img wide"><img src="assets/culper.jpg" alt="A five by five word board with red, blue and tan tiles revealed" loading="lazy"/><span class="badge">2 teams · 4 to 12</span></div>
+      </a>
+      <div class="play-text">
+        <div class="kicker">Culper · a word game for a video call</div>
+        <h3>Two teams. One board. Say one word.</h3>
+        <p>The family game, rebuilt for the family. One person opens a room and reads the code aloud, everyone else joins from a phone beside the call. Handlers see the key and say one word and a number; Agents tap tiles. One tile is Arnold, and tapping him loses on the spot.</p>
+        <p>Five hundred American words, each one chosen because it can be clued at least two unrelated ways, so the board looks like America and the clues do not. The Record keeps every clue, every tap and every Arnold, and the family can add its own words.</p>
+        <a class="btn" href="play/">Start a room</a>
+      </div>
     </div>
   </section>
 
