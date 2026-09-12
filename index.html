@@ -115,6 +115,9 @@
   .card h3 { font-family: var(--serif); font-size: 22px; font-weight: 700; line-height: 1.15; }
   .card p { font-size: 14px; color: var(--ink-70); line-height: 1.55; flex: 1; }
   .card .go { font-family: var(--mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); }
+  .group { font-family: var(--mono); font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--ink-30); display: flex; align-items: center; gap: 14px; margin: 38px 0 16px; }
+  .group::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .group:first-of-type { margin-top: 0; }
 
   /* how */
   .how { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: start; }
@@ -187,17 +190,18 @@
     <p class="lede">
       I make short films and small systems, most of them with AI in the loop:
       a personal-finance series where <strong>every number is computed, not quoted</strong>,
-      Pittsburgh sports stories with <strong>every claim sourced</strong>, and experiments
-      where two models argue until one of them changes its mind.
+      Pittsburgh sports stories with <strong>every claim sourced</strong>, generated short
+      films where the medium's failure modes are the subject, and experiments where
+      <strong>four models answer the same question blind</strong> and then argue about it.
     </p>
     <div class="cta">
       <a class="btn" href="https://acesandbabes.com/">Watch the archive</a>
       <a class="btn btn-ghost" href="https://github.com/vikramkedar4">GitHub ↗</a>
     </div>
     <div class="numbers" aria-label="At a glance">
-      <div class="n"><b>40</b><span>videos in the archive</span></div>
-      <div class="n"><b>9</b><span>series and experiments</span></div>
-      <div class="n"><b>42 min</b><span>of finished footage</span></div>
+      <div class="n"><b>71</b><span>videos in the archive</span></div>
+      <div class="n"><b>22</b><span>series and experiments</span></div>
+      <div class="n"><b>3.1 hrs</b><span>of finished footage</span></div>
       <div class="n"><b>Sep 2026</b><span>latest release</span></div>
     </div>
   </section>
@@ -208,6 +212,14 @@
       <a href="https://acesandbabes.com/">Everything, in order ↗</a>
     </div>
     <div class="featured">
+      <a class="feat" href="https://acesandbabes.com/#v=the-gardener">
+        <div class="img"><img src="assets/the-gardener.jpg" alt="" loading="lazy"/><span class="badge">0:48</span></div>
+        <div class="body">
+          <div class="kicker">AI Films</div>
+          <h3>The Gardener</h3>
+          <p>A man spends his life defending one square metre. The ending is not how big it got, it is what he missed.</p>
+        </div>
+      </a>
       <a class="feat" href="https://acesandbabes.com/#v=josh-gibson-372">
         <div class="img"><img src="assets/josh-gibson-372.jpg" alt="" loading="lazy"/><span class="badge">0:45</span></div>
         <div class="body">
@@ -216,20 +228,12 @@
           <p>Josh Gibson, the Grays and the Crawfords, and the day MLB rewrote its record book.</p>
         </div>
       </a>
-      <a class="feat" href="https://acesandbabes.com/#v=one-poem">
-        <div class="img wide"><img src="assets/one-poem.jpg" alt="" loading="lazy"/><span class="badge">7:15</span></div>
+      <a class="feat" href="https://acesandbabes.com/#v=the-order-2-super-bowl-lxi">
+        <div class="img"><img src="assets/the-order-2-super-bowl-lxi.jpg" alt="" loading="lazy"/><span class="badge">12:34</span></div>
         <div class="body">
-          <div class="kicker">One Poem · documentary</div>
-          <h3>Two AI models write one poem</h3>
-          <p>Every decision delegated to a recorded rule, every event in an append-only ledger. The ledger became the film.</p>
-        </div>
-      </a>
-      <a class="feat" href="https://acesandbabes.com/#v=money-math-ep21-where-it-all-goes">
-        <div class="img"><img src="assets/money-math-ep21-where-it-all-goes.jpg" alt="" loading="lazy"/><span class="badge">1:12</span></div>
-        <div class="body">
-          <div class="kicker">Money Math · ep. 21</div>
-          <h3>You will earn $2.6M. Here is where every dollar goes.</h3>
-          <p>A lifetime of earnings split into taxes, housing, transport, food and what is left. Every slice computed.</p>
+          <div class="kicker">The Order · question 2</div>
+          <h3>Four AIs rank Super Bowl LXI and agree on nothing</h3>
+          <p>Nine teams across four lists. The split tracks each model's training cutoff, not football.</p>
         </div>
       </a>
     </div>
@@ -240,6 +244,35 @@
       <h2>The <em>series</em></h2>
       <a href="https://acesandbabes.com/">Open the archive ↗</a>
     </div>
+    <div class="group">Films and long form</div>
+    <div class="series">
+      <a class="card" href="https://acesandbabes.com/#p=AI%20Films">
+        <div class="meta"><b>6 pieces</b><span>Film</span></div>
+        <h3>AI Films</h3>
+        <p>Original short films where every frame is generated, plus the making-of for each. One cut per generation, nothing reused. The constraints of the medium are written into the stories rather than fought.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Business%20Ideas">
+        <div class="meta"><b>7 long form</b><span>Business</span></div>
+        <h3>Business Ideas</h3>
+        <p>Twenty under $10,000, twenty under $1,000, twenty on one subscription, ten the North Hills is missing. Every claimed gap is checked against what already trades there, which has killed ideas on the way in.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=One%20Poem">
+        <div class="meta"><b>Film + 2 cuts</b><span>AI vs AI</span></div>
+        <h3>One Poem</h3>
+        <p>Two models write one poem. Every decision was delegated to a recorded rule; the append-only ledger of what happened became a seven-minute documentary.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=The%20Latent%20Gallery">
+        <div class="meta"><b>Film + short</b><span>Art</span></div>
+        <h3>The Latent Gallery</h3>
+        <p>One hashed brief, two AI image artists working blind, then attack and revise. A third model critiques the finals without knowing who made which, and the verdict goes on the record.</p>
+        <span class="go">Watch →</span>
+      </a>
+    </div>
+
+    <div class="group">The numbers</div>
     <div class="series">
       <a class="card" href="https://acesandbabes.com/#p=Money%20Math">
         <div class="meta"><b>21 shorts</b><span>Finance</span></div>
@@ -247,6 +280,28 @@
         <p>Minimum payments, the Rule of 72, the 1% fee, the tax-bracket myth. Every figure on screen is computed by one finance engine, so the numbers can be checked, not just believed.</p>
         <span class="go">Watch →</span>
       </a>
+      <a class="card" href="https://acesandbabes.com/#p=Boom%20%26%20Bust">
+        <div class="meta"><b>3 shorts</b><span>Markets</span></div>
+        <h3>Boom &amp; Bust</h3>
+        <p>AMD at $1.62. Blockbuster turning down Netflix for $50 million. Amazon down 94% on the way to turning $1,000 into millions. Every figure is a dated close with a source.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Five%20for%20Five">
+        <div class="meta"><b>Yearly</b><span>Markets</span></div>
+        <h3>Five for Five</h3>
+        <p>Four AIs each place $1M of paper money across at most five stocks for five years, blind, with their own return case and risk. No attack, no judge. The market scores it.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Ticker.exe">
+        <div class="meta"><b>2 episodes</b><span>Markets</span></div>
+        <h3>Ticker.exe</h3>
+        <p>A show about a simulated $1M portfolio: a passive core and an AI-managed sleeve, marked daily against the index. Nothing in it is real money.</p>
+        <span class="go">Watch →</span>
+      </a>
+    </div>
+
+    <div class="group">Pittsburgh and sport</div>
+    <div class="series">
       <a class="card" href="https://acesandbabes.com/#p=Pittsburgh%20Stories">
         <div class="meta"><b>5 shorts</b><span>Sports history</span></div>
         <h3>Pittsburgh Stories</h3>
@@ -265,24 +320,68 @@
         <p>Two models pick blind, see each other's picks, attack the ones they think are wrong with a stated fact, then hold or flip. Picks lock before kickoff and the scoreboard decides.</p>
         <span class="go">Watch →</span>
       </a>
+      <a class="card" href="https://acesandbabes.com/#p=Final%20Score">
+        <div class="meta"><b>Weekly</b><span>NFL</span></div>
+        <h3>Final Score</h3>
+        <p>Four AIs call the final score of every game on one slate, blind, one line of reasoning each. No attack, no judge. Cards lock before the first kickoff and the finals grade them.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=The%20Parlay">
+        <div class="meta"><b>Per game</b><span>NFL</span></div>
+        <h3>The Parlay</h3>
+        <p>Two models build a four-leg paper parlay for one game, blind, then attack and hold or revise. I pick one before kickoff and the box score grades every leg. Paper only.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=Time%20Machine%20League">
+        <div class="meta"><b>Season one</b><span>Simulation</span></div>
+        <h3>Time Machine League</h3>
+        <p>The greatest teams ever in one bracket, ten thousand simulated games per matchup and one shown, chosen by a seed committed before the run. No AI anywhere in the engine.</p>
+        <span class="go">Watch →</span>
+      </a>
+    </div>
+
+    <div class="group">One question, four models</div>
+    <div class="series">
+      <a class="card" href="https://acesandbabes.com/#p=The%20Order">
+        <div class="meta"><b>2 questions</b><span>Rankings</span></div>
+        <h3>The Order</h3>
+        <p>Four AIs rank the same five things blind, with a figure and a reason on every place, then attack each other and hold or change. No judge: a named source publishes the real table.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=The%20Open%20Question">
+        <div class="meta"><b>Film + short</b><span>Philosophy</span></div>
+        <h3>The Open Question</h3>
+        <p>A real number on a question nothing will ever settle, with the commitments underneath marked prior, evidential or methodological. There is no grader here, by construction.</p>
+        <span class="go">Watch →</span>
+      </a>
+      <a class="card" href="https://acesandbabes.com/#p=First%20Tuesday">
+        <div class="meta"><b>1 question</b><span>Forecasting</span></div>
+        <h3>First Tuesday</h3>
+        <p>A probability on a future election, the variable that decides it, and every assumption marked structural or contingent. Then they attack the assumptions. The election grades it.</p>
+        <span class="go">Watch →</span>
+      </a>
       <a class="card" href="https://acesandbabes.com/#p=Code%20Duel">
         <div class="meta"><b>3 duels</b><span>AI vs AI</span></div>
         <h3>Code Duel</h3>
         <p>Two models solve the same task blind and attack each other's code with test cases. A hidden test suite, hashed before either sees the task, is the only judge.</p>
         <span class="go">Watch →</span>
       </a>
-      <a class="card" href="https://acesandbabes.com/#p=One%20Poem">
-        <div class="meta"><b>Film + 2 cuts</b><span>AI vs AI</span></div>
-        <h3>One Poem</h3>
-        <p>Two models write one poem. Every decision was delegated to a recorded rule; the append-only ledger of what happened became a seven-minute documentary.</p>
+      <a class="card" href="https://acesandbabes.com/#p=The%20Inherent%20Response">
+        <div class="meta"><b>2 bouts</b><span>Judged</span></div>
+        <h3>The Inherent Response</h3>
+        <p>Two models answer from the gut, blind, then attack and hold or revise. I judge in my own words and the judgment goes in the ledger, including when I delegated it.</p>
         <span class="go">Watch →</span>
       </a>
-      <a class="card" href="https://acesandbabes.com/#p=Ticker.exe">
-        <div class="meta"><b>2 episodes</b><span>Markets</span></div>
-        <h3>Ticker.exe</h3>
-        <p>A show about a simulated $1M portfolio: a passive core and an AI-managed sleeve, marked daily against the index. Nothing in it is real money.</p>
+      <a class="card" href="https://acesandbabes.com/#p=Refusal%20Engine">
+        <div class="meta"><b>1 short</b><span>Methodology</span></div>
+        <h3>Refusal Engine</h3>
+        <p>A ladder of questions ascending in discomfort, and the same question asked twice to measure drift. A drift score means nothing without a noise floor, which is the point.</p>
         <span class="go">Watch →</span>
       </a>
+    </div>
+
+    <div class="group">Everything else</div>
+    <div class="series">
       <a class="card" href="https://acesandbabes.com/#p=Guess%20the%20Price">
         <div class="meta"><b>1 short</b><span>Art</span></div>
         <h3>Guess the Price</h3>
@@ -318,10 +417,11 @@
     <div class="now">
       <div class="stamp">Now<small>September 2026</small></div>
       <ul>
-        <li><b>Vik's Picks Arena, Week 1</b> is locked: 15 games, 3 disagreements, 6 attacks, 0 flips. The scoreboard settles it after Monday night.</li>
-        <li><b>Code Duel</b> has three ties on the record. The next duel needs harder tasks.</li>
-        <li><b>Money Math</b> has 21 episodes cut. Next is the upload run, then episode 22.</li>
-        <li><b>The archive</b> at acesandbabes.com now holds every finished piece, in the order it happened.</li>
+        <li><b>Four NFL shows are locked for Week 1</b> and one board grades all of them against a single archived scoreboard pull. Picks, the Arena, Final Score and the Parlay all settle after Monday night.</li>
+        <li><b>The Order</b> asked four models to rank Super Bowl LXI. Nine teams came back across four lists, and the disagreement tracks each model's training cutoff rather than any football reasoning.</li>
+        <li><b>The Open Question</b> put twelve attacks into four credences and moved nobody, because three of the four named a prior as their own weakest link.</li>
+        <li><b>Three generated short films</b> in three days, each with a making-of built from the production's real artefacts. The rule that made them work: one cut per generation, nothing reused.</li>
+        <li><b>The archive</b> at acesandbabes.com holds all 71 finished pieces, in the order they happened.</li>
       </ul>
     </div>
   </section>
