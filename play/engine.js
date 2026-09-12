@@ -297,6 +297,28 @@ function apply(s, e) {
       if (g.clue.taps < 1) return 'make at least one guess first';
       return passTurn(g, 'pass', e.t);
     }
+    case 'turn_timed_out': {
+      // Any player may call time on the turn in progress. The event carries the
+      // turn's start stamp so a late duplicate for an old turn is rejected.
+      if (!live) return 'no live game';
+      if (!me) return 'unknown player';
+      if (!s.settings.timerSeconds) return 'no timer';
+      if (e.turnStartedAt !== g.turnStartedAt) return 'stale timeout';
+      if (g.phase === 'clue') {
+        g.turns.push({ team: g.turn, handler: g.handlers[g.turn], clue: null, number: null, taps: [], end: null, at: e.t || 0 });
+      }
+      return passTurn(g, 'time', e.t);
+    }
+    case 'handler_set': {
+      // Anyone at the table may name a team's Handler between games.
+      if (live) return 'roles are locked during a game';
+      if (!me) return 'unknown player';
+      const p = s.players[e.playerId];
+      if (!p || !TEAMS.includes(e.team) || p.team !== e.team) return 'that player is not on that team';
+      for (const q of teamMembers(s, e.team)) q.role = 'agent';
+      p.role = 'handler';
+      return true;
+    }
     case 'game_abandoned': {
       if (!live) return 'no live game';
       return endGame(s, null, 'abandoned', 'abandoned', e.t);
@@ -342,8 +364,10 @@ export function stats(s) {
   const moles = [];
   const wordClued = {};
   const agentTaps = {};
+  let timeouts = 0;
   for (const g of games) {
     for (const turn of g.turns) {
+      if (turn.clue == null) { timeouts++; continue; } // the clock ran out before a clue
       const correct = turn.taps.filter((x) => x.result === turn.team).length;
       const h = (byHandler[turn.handler] ||= { clues: 0, correct: 0, tapsMeant: 0, moles: 0 });
       h.clues++;
@@ -366,7 +390,12 @@ export function stats(s) {
   const bestClue = clues.slice().sort((a, b) => b.correct - a.correct || (a.number === 'inf' ? 99 : a.number) - (b.number === 'inf' ? 99 : b.number))[0] || null;
   const longestTurn = clues.reduce((m, c) => Math.max(m, c.correct), 0);
   const mostClued = Object.entries(wordClued).sort((a, b) => b[1] - a[1])[0] || null;
-  return { games: games.length, byHandler, agentTaps, clues, moles, bestClue, longestTurn, mostClued };
+  // Efficiency: a Handler's correct taps over the taps they promised; an Agent's correct taps over taps made.
+  for (const h of Object.values(byHandler)) h.efficiency = h.tapsMeant ? h.correct / h.tapsMeant : 0;
+  for (const a of Object.values(agentTaps)) a.accuracy = a.taps ? a.correct / a.taps : 0;
+  const bestHandler = Object.entries(byHandler).filter(([, h]) => h.clues >= 2).sort((a, b) => b[1].efficiency - a[1].efficiency || b[1].correct - a[1].correct)[0] || null;
+  const bestAgent = Object.entries(agentTaps).filter(([, a]) => a.taps >= 3).sort((a, b) => b[1].accuracy - a[1].accuracy || b[1].correct - a[1].correct)[0] || null;
+  return { games: games.length, byHandler, agentTaps, clues, moles, bestClue, longestTurn, mostClued, timeouts, bestHandler, bestAgent };
 }
 
 // Fold a whole log. Used on load and by tests.

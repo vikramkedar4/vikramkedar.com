@@ -117,6 +117,11 @@ input[type=text]:focus, select:focus { outline: 2px solid var(--blue); outline-o
 .over.blue { background: var(--blue); }
 .over.none { background: var(--ink-2); }
 .over h2 { color: #fff; font-size: 1.5rem; }
+.over .next { margin-top: 10px; font-size: .95rem; opacity: .95; }
+.over .next button { margin-left: 6px; color: #fff; border-color: rgba(255,255,255,.5); }
+.timer { font-size: 1.1rem; font-weight: 700; }
+.timer.low { animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
 
 /* --------------------------------------------------------------- panels */
 .tabs { display: flex; gap: 6px; margin: 14px 0 6px; flex-wrap: wrap; }

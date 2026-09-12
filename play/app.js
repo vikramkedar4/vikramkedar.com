@@ -16,17 +16,19 @@ let log = [];   // [{ key, e }] sorted by key: the room's log in its own order, 
 let fam = null;
 let famWords = [];
 let unsub = null;
-const ui = { screen: 'home', error: '', keyView: true, tab: 'log', joinCode: '', busy: false };
+const ui = { screen: 'home', error: '', keyView: true, tab: 'log', joinCode: '', busy: '' };
 
 // ------------------------------------------------------------------ helpers
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const pct = (x) => Math.round(x * 100) + '%';
 const P = (id) => (state && state.players[id]) || { name: '?', team: null, role: 'agent' };
 const mine = () => (state && state.players[me.id]) || null;
 const team = (t) => (state ? state.order.map((id) => state.players[id]).filter((p) => p.team === t) : []);
 const handlerOf = (t) => team(t).find((p) => p.role === 'handler');
 const num = (n) => (n === 'inf' ? '∞' : String(n));
 const fmtTime = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const withTimeout = (p, ms, msg) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(msg)), ms))]);
 
 function roomCode() {
   const plain = pack.words.filter((w) => /^[A-Za-z]{3,9}$/.test(w));
@@ -34,6 +36,15 @@ function roomCode() {
   let a = pick(); let b = pick();
   while (b === a) b = pick();
   return a + '-' + b;
+}
+
+// Accept anything a family member might type or paste: lowercase, a space
+// instead of the hyphen, an iOS smart dash, or the whole link.
+function normalizeCode(raw) {
+  let s = String(raw || '').trim();
+  const m = s.match(/[?&]room=([^&#\s]+)/i);
+  if (m) s = decodeURIComponent(m[1]);
+  return s.normalize('NFKD').toUpperCase().replace(/[^A-Z]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 function setUrl(code) {
@@ -44,31 +55,45 @@ function setUrl(code) {
 
 async function send(e) {
   if (!room) return;
-  await room.append({ by: me.id, ...e });
+  try {
+    await room.append({ by: me.id, ...e });
+  } catch (err) {
+    ui.error = 'That did not go through: ' + (err && err.message ? err.message : err);
+    render();
+  }
 }
 
 // -------------------------------------------------------------------- flow
 async function createRoom() {
   const code = roomCode();
-  room = await openRoom(code, config);
-  await room.append({ type: 'room_created', by: me.id, pack: pack.id, settings: { timerSeconds: config.timerDefault } });
+  ui.busy = 'Creating the room…'; render();
+  try {
+    room = await withTimeout(openRoom(code, config), 15000, 'no answer from the game server');
+    await withTimeout(room.append({ type: 'room_created', by: me.id, pack: pack.id, settings: { timerSeconds: config.timerDefault } }), 15000, 'no answer from the game server');
+  } catch (err) {
+    ui.error = 'Could not create a room: ' + (err && err.message ? err.message : err) + '. Check the connection and try again.';
+    ui.busy = '';
+    if (room) { room.close(); room = null; }
+    return render();
+  }
   await join(code);
 }
 
-async function join(code) {
-  code = String(code || '').trim().toUpperCase().replace(/\s+/g, '-');
-  if (!/^[A-Z]+-[A-Z]+$/.test(code)) { ui.error = 'A room code looks like MUSTANG-DELTA.'; return render(); }
-  if (!me.name) { ui.joinCode = code; ui.error = 'Pick a name first.'; return render(); }
-  ui.busy = true; render();
+async function join(raw) {
+  const code = normalizeCode(raw);
+  if (!/^[A-Z]+-[A-Z]+$/.test(code)) { ui.error = 'A room code is two words, like MUSTANG-DELTA.'; return render(); }
+  if (!me.name) { ui.joinCode = code; ui.error = 'Type your name first, then join.'; return render(); }
+  ui.busy = 'Joining ' + code + '…'; ui.error = ''; render();
   try {
     if (!room || room.code !== code) {
       if (unsub) unsub();
       if (room) room.close();
-      room = await openRoom(code, config);
+      room = await withTimeout(openRoom(code, config), 15000, 'no answer from the game server');
     }
-    if (!(await room.exists())) {
-      ui.error = 'No room called ' + code + '. Check the code, or create one.';
-      room.close(); room = null; ui.busy = false;
+    const found = await withTimeout(room.exists(), 15000, 'no answer from the game server');
+    if (!found) {
+      ui.error = 'No room called ' + code + '. Check the two words with whoever made it, or create a new room.';
+      room.close(); room = null; ui.busy = '';
       return render();
     }
     state = initialState(code);
@@ -83,9 +108,11 @@ async function join(code) {
     setUrl(code);
     ui.error = '';
   } catch (err) {
-    ui.error = 'Could not open the room: ' + (err && err.message ? err.message : err);
+    ui.error = 'Could not open the room: ' + (err && err.message ? err.message : err) + '. Check the connection and try again.';
+    if (room) { try { room.close(); } catch {} }
+    room = null; state = null; unsub = null;
   }
-  ui.busy = false;
+  ui.busy = '';
   render();
 }
 
@@ -117,7 +144,7 @@ async function leave() {
   if (unsub) unsub();
   if (room) room.close();
   room = null; state = null; unsub = null; log = [];
-  ui.screen = 'home'; ui.error = '';
+  ui.screen = 'home'; ui.error = ''; ui.joinCode = '';
   setUrl(null);
   render();
 }
@@ -132,16 +159,42 @@ function dealGame() {
   send({ type: 'game_started', ...payload });
 }
 
+// ------------------------------------------------------------------- timer
+// The clock ends the turn. Every client on the team whose turn it is may call
+// time, after a small random delay so one of them usually lands first; the
+// engine rejects the rest as stale.
+let timedOutFor = null;
+function tickTimer() {
+  const g = state && state.game;
+  const el = document.getElementById('timer');
+  if (!g || g.phase === 'over' || !state.settings.timerSeconds) return;
+  const left = g.turnStartedAt + state.settings.timerSeconds * 1000 - Date.now();
+  if (el) {
+    el.textContent = left <= 0 ? 'time' : fmtTime(left);
+    el.classList.toggle('low', left < 15000);
+  }
+  const my = mine();
+  if (left <= 0 && my && my.team === g.turn && timedOutFor !== g.turnStartedAt) {
+    const started = g.turnStartedAt;
+    timedOutFor = started;
+    setTimeout(() => {
+      const now = state && state.game;
+      if (now && now.phase !== 'over' && now.turnStartedAt === started) send({ type: 'turn_timed_out', turnStartedAt: started });
+    }, Math.random() * 1500);
+  }
+}
+setInterval(tickTimer, 1000);
+
 // ---------------------------------------------------------------- actions
+const nameField = () => { const el = document.getElementById('name'); return el ? el.value.trim().slice(0, 24) : ''; };
 const actions = {
-  'set-name': (el) => { const v = document.getElementById('name').value.trim().slice(0, 24); if (!v) return; me.save({ name: v }); ui.error = ''; if (state) send({ type: 'player_updated', name: v }); render(); },
-  'create': async () => { const v = document.getElementById('name').value.trim().slice(0, 24); if (!v) { ui.error = 'Pick a name first.'; return render(); } me.save({ name: v }); ui.busy = true; render(); await createRoom(); },
-  'join': async () => { const v = document.getElementById('name').value.trim().slice(0, 24); if (v) me.save({ name: v }); await join(document.getElementById('code').value); },
+  'set-name': () => { const v = nameField(); if (!v) return; me.save({ name: v }); ui.error = ''; if (state) send({ type: 'player_updated', name: v }); render(); },
+  'create': async () => { const v = nameField(); if (!v) { ui.error = 'Type your name first.'; return render(); } me.save({ name: v }); await createRoom(); },
+  'join': async () => { const v = nameField(); if (v) me.save({ name: v }); const code = document.getElementById('code'); await join(code ? code.value : ui.joinCode); },
   'leave': leave,
   'team': (el) => send({ type: 'player_updated', team: el.dataset.team }),
-  'handler': () => send({ type: 'player_updated', role: 'handler' }),
-  'agent': () => send({ type: 'player_updated', role: 'agent' }),
-  'timer': (el) => send({ type: 'settings_updated', timerSeconds: el.value ? Number(el.value) : null }),
+  'make-handler': (el) => send({ type: 'handler_set', team: el.dataset.team, playerId: el.dataset.player }),
+  'timer': (el) => send({ type: 'settings_updated', timerSeconds: el.value ? Number(el.value) : 0 }),
   'deal': dealGame,
   'lobby': () => { ui.screen = 'lobby'; render(); },
   'game': () => { ui.screen = 'game'; render(); },
@@ -176,7 +229,7 @@ app.addEventListener('keydown', (ev) => {
   const t = ev.target;
   if (t.id === 'clue') actions.clue();
   if (t.id === 'code') actions.join();
-  if (t.id === 'name' && !state) { const code = document.getElementById('code'); if (code && code.value) actions.join(); else actions.create(); }
+  if (t.id === 'name' && !state) { const code = document.getElementById('code'); if ((code && code.value) || ui.joinCode) actions.join(); else actions.create(); }
   if (t.id === 'name' && state) actions['set-name']();
   if (t.id === 'fam') actions['fam-add']();
 });
@@ -191,48 +244,54 @@ function render() {
 }
 
 function renderHome() {
-  const code = ui.joinCode || new URL(location.href).searchParams.get('room') || '';
+  const code = ui.joinCode || normalizeCode(new URL(location.href).searchParams.get('room') || '');
+  const invited = /^[A-Z]+-[A-Z]+$/.test(code);
   return `
   <div class="hero"><h1>Culper</h1><div class="sub">Two teams. One board. Say one word.</div></div>
   <div class="card stack">
-    <label>Your name<input type="text" id="name" maxlength="24" placeholder="What the family calls you" value="${esc(me.name)}" autocomplete="nickname"></label>
-    <label>Room code<input type="text" id="code" class="code-input" placeholder="MUSTANG-DELTA" value="${esc(code)}" autocapitalize="characters" autocomplete="off"></label>
+    ${invited ? `<p>You were invited to room <b>${esc(code)}</b>. Type your name and join.</p>` : ''}
+    <label>Your name<input type="text" id="name" maxlength="24" placeholder="What the family calls you" value="${esc(me.name)}" autocomplete="nickname" autocorrect="off" spellcheck="false"></label>
+    <label>Room code<input type="text" id="code" class="code-input" placeholder="MUSTANG-DELTA" value="${esc(code)}" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></label>
     ${ui.error ? `<div class="err">${esc(ui.error)}</div>` : ''}
+    ${ui.busy ? `<div class="muted">${esc(ui.busy)}</div>` : ''}
     <div class="row">
-      <button class="primary" data-action="join" ${ui.busy ? 'disabled' : ''}>Join room</button>
-      <button data-action="create" ${ui.busy ? 'disabled' : ''}>Create a new room</button>
+      <button class="primary" data-action="join" ${ui.busy ? 'disabled' : ''}>${invited ? 'Join ' + esc(code) : 'Join room'}</button>
+      <button class="${invited ? 'ghost' : ''}" data-action="create" ${ui.busy ? 'disabled' : ''}>Create a new room</button>
     </div>
-    <small>Open this page beside your video call. One person creates a room and reads the code aloud, or sends the link.</small>
+    <small>Open this page beside your video call. One person creates a room and reads the two words aloud, or sends the link. Everyone else types the two words and joins. Capitals, spaces and dashes do not matter.</small>
   </div>
   ${renderHelp()}`;
 }
 
 function renderPlayers(t, inLobby) {
+  const locked = state.game && state.game.phase !== 'over';
+  const rows = team(t).map((p) => `<li class="${p.id === me.id ? 'me' : ''}"><span>${esc(p.name)}${p.id === me.id ? ' <small class="muted">(you)</small>' : ''}${p.role === 'handler' ? ` <span class="badge handler">${esc(L.handler)}</span>` : ''}${p.handled ? ` <small class="muted">· handled ${p.handled}×</small>` : ''}</span>
+      ${inLobby && !locked && p.role !== 'handler' ? `<button class="small" data-action="make-handler" data-team="${t}" data-player="${esc(p.id)}">${p.id === me.id ? 'Me as ' + esc(L.handler) : 'Make ' + esc(L.handler)}</button>` : ''}</li>`).join('');
   const my = mine();
-  const rows = team(t).map((p) => `<li class="${p.id === me.id ? 'me' : ''}"><span>${esc(p.name)}${p.role === 'handler' ? ` <span class="badge handler">${esc(L.handler)}</span>` : ''}</span>
-      ${inLobby && p.id === me.id && !(state.game && state.game.phase !== 'over') ? (p.role === 'handler' ? `<button class="small ghost" data-action="agent">Be an ${esc(L.agent)}</button>` : `<button class="small" data-action="handler">Be the ${esc(L.handler)}</button>`) : ''}</li>`).join('');
   return `<div class="team ${t}"><h3>${cap(t)} <span class="muted">· ${team(t).length}</span></h3>
-    ${inLobby && (!my || my.team !== t) ? `<button class="small ${t}" data-action="team" data-team="${t}">Join ${cap(t)}</button>` : ''}
+    ${inLobby && !locked && (!my || my.team !== t) ? `<button class="small ${t}" data-action="team" data-team="${t}">Join ${cap(t)}</button>` : ''}
+    ${inLobby && locked && (!my || !my.team) ? `<button class="small ${t}" data-action="team" data-team="${t}">Join ${cap(t)}</button>` : ''}
     <ul>${rows || '<li class="unassigned">nobody yet</li>'}</ul></div>`;
 }
 
 function renderLobby() {
   const g = state.game;
-  const my = mine();
   const unassigned = state.order.map((id) => state.players[id]).filter((p) => !p.team);
   const ready = TEAMS.every((t) => handlerOf(t) && team(t).length >= 2);
   const live = g && g.phase !== 'over';
+  const t = state.settings.timerSeconds || '';
   return `
   <div class="row between"><h1>Culper</h1><div class="row"><span class="badge">${esc(state.code)}</span><button class="small" data-action="copy">Copy link</button><button class="small ghost" data-action="leave">Leave</button></div></div>
   <div class="card stack">
-    <div class="row"><input type="text" id="name" maxlength="24" value="${esc(me.name)}" style="max-width:260px"><button class="small" data-action="set-name">Rename</button></div>
+    <div class="row"><input type="text" id="name" maxlength="24" value="${esc(me.name)}" style="max-width:260px" autocorrect="off" spellcheck="false"><button class="small" data-action="set-name">Rename</button></div>
     <div class="teams">${renderPlayers('red', true)}${renderPlayers('blue', true)}</div>
     ${unassigned.length ? `<div class="unassigned">Not on a team yet: ${unassigned.map((p) => esc(p.name)).join(', ')}</div>` : ''}
+    ${!live ? `<small>${esc(L.handler)}s give the clues. Anyone can set a team's ${esc(L.handler)} here${g ? ', and they rotate on their own after each game' : ''}.</small>` : ''}
     <div class="row between">
-      <label class="row">Turn timer <select data-action="timer">${[['', 'none'], [60, '1:00'], [90, '1:30'], [120, '2:00'], [180, '3:00']].map(([v, l]) => `<option value="${v}" ${String(state.settings.timerSeconds || '') === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      <label class="row">Turn clock <select data-action="timer" ${live ? 'disabled' : ''}>${[['', 'off'], [60, '1:00'], [90, '1:30'], [120, '2:00'], [180, '3:00'], [300, '5:00']].map(([v, l]) => `<option value="${v}" ${String(t) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select><small class="muted">ends the turn when it runs out</small></label>
       ${live ? `<button class="primary" data-action="game">Back to the board</button>` : `<button class="primary" data-action="deal" ${ready ? '' : 'disabled'}>${g ? 'Deal the next game' : 'Deal'}</button>`}
     </div>
-    ${!ready && !live ? `<small>Each team needs a ${esc(L.handler)} and at least one ${esc(L.agent)}. ${g ? `${esc(L.handler)}s rotate on their own; change them here if you like.` : ''}</small>` : ''}
+    ${!ready && !live ? `<small>Each team needs a ${esc(L.handler)} and at least one ${esc(L.agent)}.</small>` : ''}
     ${ui.error ? `<div class="err">${esc(ui.error)}</div>` : ''}
   </div>
   ${renderTabs(['family', 'record', 'help'])}`;
@@ -268,12 +327,14 @@ function renderGame() {
   let over = '';
   if (!live) {
     const why = g.reason === 'mole' ? `${cap(other(g.winner))} tapped ${esc(L.mole)}.` : g.reason === 'all' ? `${cap(g.winner)} found every word.` : 'Game abandoned.';
-    over = `<div class="over ${g.winner || 'none'}"><h2>${g.winner ? cap(g.winner) + ' wins' : 'No result'}</h2><div>${why}</div></div>`;
+    const hr = handlerOf('red'); const hb = handlerOf('blue');
+    over = `<div class="over ${g.winner || 'none'}"><h2>${g.winner ? cap(g.winner) + ' wins' : 'No result'}</h2><div>${why}</div>
+      <div class="next">Next ${esc(L.handler)}s: <b>${hr ? esc(hr.name) : '—'}</b> for Red, <b>${hb ? esc(hb.name) : '—'}</b> for Blue. <button class="small ghost" data-action="lobby">Change</button></div></div>`;
   }
 
   let controls = '';
   if (live && isHandler && myTurn && g.phase === 'clue') {
-    controls = `<div class="clueform"><input type="text" id="clue" maxlength="40" placeholder="One word" autocomplete="off" autocapitalize="characters"><select id="clue-n">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'inf'].map((n) => `<option value="${n}" ${n === 2 ? 'selected' : ''}>${num(n)}</option>`).join('')}</select><button class="primary" data-action="clue">Send</button></div>`;
+    controls = `<div class="clueform"><input type="text" id="clue" maxlength="40" placeholder="One word" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="characters"><select id="clue-n">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 'inf'].map((n) => `<option value="${n}" ${n === 2 ? 'selected' : ''}>${num(n)}</option>`).join('')}</select><button class="primary" data-action="clue">Send</button></div>`;
   } else if (live && myTurn && g.phase === 'guess' && g.clue.taps > 0) {
     controls = `<div class="row" style="justify-content:center"><button data-action="end-turn">End turn</button></div>`;
   }
@@ -293,11 +354,9 @@ function renderGame() {
 }
 
 function renderTimer(g) {
-  const end = g.turnStartedAt + state.settings.timerSeconds * 1000;
-  const left = end - Date.now();
+  const left = g.turnStartedAt + state.settings.timerSeconds * 1000 - Date.now();
   return `<div class="timer ${left < 15000 ? 'low' : ''}" id="timer">${left <= 0 ? 'time' : fmtTime(left)}</div>`;
 }
-setInterval(() => { const el = document.getElementById('timer'); if (el && state && state.game && state.game.phase !== 'over') { const end = state.game.turnStartedAt + state.settings.timerSeconds * 1000; const left = end - Date.now(); el.textContent = left <= 0 ? 'time' : fmtTime(left); el.classList.toggle('low', left < 15000); } }, 1000);
 
 function renderTabs(tabs) {
   if (!tabs.includes(ui.tab)) ui.tab = tabs[0];
@@ -307,8 +366,10 @@ function renderTabs(tabs) {
 }
 
 function turnLine(turn) {
+  if (turn.clue == null) return `<li><span class="chip ${turn.team}">${turn.team}</span> <span class="who">${esc(P(turn.handler).name)}</span>: the clock ran out before a clue</li>`;
   const correct = turn.taps.filter((x) => x.result === turn.team).length;
-  return `<li><span class="chip ${turn.team}">${turn.team}</span> <span class="who">${esc(P(turn.handler).name)}</span>: <b>${esc(turn.clue)}</b> ${num(turn.number)} → ${correct} right${turn.end ? ` · ${esc(turn.end === 'guesses' ? 'used them all' : turn.end)}` : ''}
+  const ends = { guesses: 'used them all', bystander: L.bystander.toLowerCase(), opponent: 'their word', mole: L.mole, pass: 'stopped', win: 'won', time: 'clock', abandoned: 'abandoned' };
+  return `<li><span class="chip ${turn.team}">${turn.team}</span> <span class="who">${esc(P(turn.handler).name)}</span>: <b>${esc(turn.clue)}</b> ${num(turn.number)} → ${correct} right${turn.end ? ` · ${esc(ends[turn.end] || turn.end)}` : ''}
     <div class="taps">${turn.taps.map((x) => `<span class="chip ${x.result}">${esc(x.word)}</span>`).join('')}</div></li>`;
 }
 
@@ -320,21 +381,26 @@ function renderLog() {
 
 function renderRecord() {
   const st = stats(state);
-  if (!st.games) return '<p class="muted">The record starts after the first finished game. Every clue, every tap, every ' + esc(L.mole) + ' goes in it.</p>';
+  if (!st.games) return '<p class="muted">The record starts after the first finished game. Every clue, every tap, every ' + esc(L.mole) + ' goes in it, and each player gets an efficiency number.</p>';
   const name = (id) => esc(P(id).name);
-  const handlers = Object.entries(st.byHandler).sort((a, b) => b[1].correct - a[1].correct).map(([id, h]) => `<li>${name(id)}: ${h.clues} clue${h.clues === 1 ? '' : 's'}, ${h.correct} of ${h.tapsMeant} meant, ${h.moles} ${esc(L.mole)}${h.moles === 1 ? '' : 's'}</li>`).join('');
-  const agents = Object.entries(st.agentTaps).sort((a, b) => b[1].correct / b[1].taps - a[1].correct / a[1].taps).map(([id, a]) => `<li>${name(id)}: ${a.correct}/${a.taps} taps right${a.moles ? `, tapped ${esc(L.mole)} ${a.moles}×` : ''}</li>`).join('');
+  const handlers = Object.entries(st.byHandler).sort((a, b) => b[1].efficiency - a[1].efficiency || b[1].correct - a[1].correct)
+    .map(([id, h]) => `<li><b>${name(id)}</b> · ${pct(h.efficiency)} · ${h.correct} of ${h.tapsMeant} promised, ${h.clues} clue${h.clues === 1 ? '' : 's'}${h.moles ? `, ${h.moles} ${esc(L.mole)}${h.moles === 1 ? '' : 's'}` : ''}</li>`).join('');
+  const agents = Object.entries(st.agentTaps).sort((a, b) => b[1].accuracy - a[1].accuracy || b[1].correct - a[1].correct)
+    .map(([id, a]) => `<li><b>${name(id)}</b> · ${pct(a.accuracy)} · ${a.correct} of ${a.taps} taps right${a.moles ? `, tapped ${esc(L.mole)} ${a.moles}×` : ''}</li>`).join('');
   const games = state.games.slice().reverse().map((g) => `<li>Game ${g.no}: ${g.winner ? `<span class="chip ${g.winner}">${g.winner}</span> ${g.reason === 'mole' ? esc(L.mole) : 'all words'}` : 'abandoned'} · ${g.turns.length} turns · ${esc(L.handler)}s ${name(g.handlers.red)} / ${name(g.handlers.blue)}</li>`).join('');
   return `<div class="stack">
     <div class="stats">
       <div class="stat"><div class="k">Games</div><div class="v">${st.games}</div></div>
       <div class="stat"><div class="k">Best clue</div><div class="v">${st.bestClue ? `${esc(st.bestClue.clue)} ${num(st.bestClue.number)} → ${st.bestClue.correct}` : '—'}</div><small>${st.bestClue ? name(st.bestClue.handler) : ''}</small></div>
+      <div class="stat"><div class="k">Best ${esc(L.handler)}</div><div class="v">${st.bestHandler ? name(st.bestHandler[0]) : '—'}</div><small>${st.bestHandler ? pct(st.bestHandler[1].efficiency) + ' of promised taps found' : 'needs two clues'}</small></div>
+      <div class="stat"><div class="k">Best ${esc(L.agent)}</div><div class="v">${st.bestAgent ? name(st.bestAgent[0]) : '—'}</div><small>${st.bestAgent ? pct(st.bestAgent[1].accuracy) + ' of taps right' : 'needs three taps'}</small></div>
       <div class="stat"><div class="k">Longest turn</div><div class="v">${st.longestTurn}</div></div>
       <div class="stat"><div class="k">Most found word</div><div class="v">${st.mostClued ? esc(st.mostClued[0]) : '—'}</div></div>
     </div>
-    <div class="card"><h2>${esc(L.handler)}s</h2><ul>${handlers}</ul></div>
-    <div class="card"><h2>${esc(L.agent)}s</h2><ul>${agents}</ul></div>
+    <div class="card"><h2>${esc(L.handler)}s</h2><small class="muted">Efficiency: taps found over taps promised by the number.</small><ul>${handlers}</ul></div>
+    <div class="card"><h2>${esc(L.agent)}s</h2><small class="muted">Accuracy: right taps over all taps.</small><ul>${agents}</ul></div>
     ${st.moles.length ? `<div class="card"><h2>${esc(L.mole)} club</h2><ul>${st.moles.map((m) => `<li>Game ${m.game}: ${name(m.by)} tapped <b>${esc(m.word)}</b> on "${esc(m.clue)}"</li>`).join('')}</ul></div>` : ''}
+    ${st.timeouts ? `<div class="card"><h2>Clock</h2><p>${st.timeouts} turn${st.timeouts === 1 ? '' : 's'} ended by the clock before a clue.</p></div>` : ''}
     <div class="card"><h2>Games</h2><ul class="log">${games}</ul></div>
   </div>`;
 }
@@ -342,7 +408,7 @@ function renderRecord() {
 function renderFamily() {
   return `<div class="card stack">
     <p>Words only this family would clue. Up to ${config.familyMax} land on each board, unmarked.</p>
-    <div class="row"><input type="text" id="fam" maxlength="24" placeholder="Add a word" style="max-width:260px" ${fam ? '' : 'disabled'}><button class="small" data-action="fam-add" ${fam ? '' : 'disabled'}>Add</button></div>
+    <div class="row"><input type="text" id="fam" maxlength="24" placeholder="Add a word" style="max-width:260px" autocorrect="off" spellcheck="false" ${fam ? '' : 'disabled'}><button class="small" data-action="fam-add" ${fam ? '' : 'disabled'}>Add</button></div>
     <div class="words">${famWords.map((w) => `<span class="w" title="${esc(w.by || '')}">${esc(w.word)}</span>`).join('') || '<small class="muted">Nothing yet.</small>'}</div>
   </div>`;
 }
@@ -357,15 +423,17 @@ function renderHelp() {
       <li>${esc(L.agent)}s tap tiles one at a time. Your color: keep going. A ${esc(L.bystander)} or the other team's color: turn over. ${esc(L.mole)}: you lose on the spot.</li>
       <li>You may tap up to the number <b>plus one</b>, and may stop after one.</li>
       <li>First team to find all its words wins. The team that goes first has nine, the other eight.</li>
-      <li>${esc(L.handler)}s rotate every game. The Record keeps every clue.</li>
+      <li>${esc(L.handler)}s rotate every game, and anyone can change them in the lobby. The Record keeps every clue and scores every player.</li>
+      <li>With the clock on, a turn ends when it runs out, clue or no clue.</li>
     </ol>
     <small>Culper is named for Washington's spy ring on Long Island, which ran on code names and a numbered code book.</small>
   </div>`;
 }
 
 // -------------------------------------------------------------------- boot
+window.culper = { send, state: () => state }; // for tests from the console
 (async function boot() {
-  const code = new URL(location.href).searchParams.get('room');
+  const code = normalizeCode(new URL(location.href).searchParams.get('room') || '');
   render();
   if (code && me.name) await join(code);
   else if (code) { ui.joinCode = code; render(); }
