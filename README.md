@@ -38,19 +38,41 @@ The GoDaddy "WebsiteBuilder Site" `A` record was removed the same day and the
 `www` CNAME was pointed at `vikramkedar4.github.io`. Leave `_dmarc`,
 `_domainconnect`, `pay`, `NS` and `SOA` alone.
 
-**Known gap (2026-09-10 evening):** GitHub's certificate covers `vikramkedar.com`
-only, so `https://www.vikramkedar.com` shows a certificate error until GitHub
-re-checks the `www` record and reissues (usually within a day). If it has not
-fixed itself, force it: remove and re-add the custom domain, then re-enable HTTPS:
+## The www certificate, and how to actually force a reissue
+
+The first certificate was minted while the `www` CNAME still pointed at the apex
+instead of `vikramkedar4.github.io`, so it covered `vikramkedar.com` only and
+`https://www.vikramkedar.com` failed. Fixing the DNS did not fix the certificate.
+
+**What does not work** (learned the hard way on 2026-09-12, three attempts):
+removing the custom domain and re-adding *the same value*. Even with an
+eight-minute gap, GitHub reuses the existing certificate for that domain and
+never issues a new request. The API reports `state: approved` the whole time
+and `domains` never changes.
+
+**What does work:** set the custom domain to a *different* value, then back.
+Changing it to `www.vikramkedar.com` forces a genuine new request, and setting
+it back to the apex leaves a queued request covering both names:
 
 ```
 R=repos/vikramkedar4/vikramkedar.com/pages
-echo '{"cname": null}' | gh api -X PUT $R --input -
-sleep 120
-echo '{"cname": "vikramkedar.com"}' | gh api -X PUT $R --input -
-gh api $R --jq '.https_certificate'      # wait for domains to include www
+gh api -X PUT $R -F https_enforced=false
+echo '{"cname": "www.vikramkedar.com"}' | gh api -X PUT $R --input -   # forces a new request
+sleep 60
+echo '{"cname": "vikramkedar.com"}'     | gh api -X PUT $R --input -   # back to apex canonical
+gh api $R --jq '.https_certificate'     # expect state new/authorization_pending, both domains
+# once state is "approved" and both domains are listed:
 gh api -X PUT $R -F https_enforced=true
 ```
+
+**Do not leave it pointed at `www` while you wait.** In that configuration the
+apex 301s to `www`, and until the new certificate lands *neither* hostname works
+over HTTPS. Revert to the apex immediately; the old apex certificate keeps
+serving and the new two-domain request stays queued behind it.
+
+Provisioning is not instant. `new` and `authorization_pending` are normal and
+can sit for an hour or more; GitHub documents up to 24 hours. Polling does not
+speed it up. Check with the command above, not in a loop.
 
 ## Local preview
 
